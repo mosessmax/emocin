@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mood-based music recommender | emocin</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f39c12;
+            --background-color: #f5f7fa;
+            --text-color: #333333;
+            --card-background: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .mood-slider {
+            margin-bottom: 20px;
+        }
+        .mood-slider label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .mood-slider input {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 15px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .mood-slider input:hover {
+            opacity: 1;
+        }
+        .mood-slider input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+        }
+        .mood-slider input::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #recommendations {
+            margin-top: 20px;
+        }
+        .recommendation {
+            background-color: var(--card-background);
+            border-left: 4px solid var(--secondary-color);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>mood-based music recommender (emocin)</h1>
+        
+        <div class="mood-slider">
+            <label for="happiness">Happiness</label>
+            <input type="range" id="happiness" min="0" max="100" value="50">
+        </div>
+        
+        <div class="mood-slider">
+            <label for="energy">Energy</label>
+            <input type="range" id="energy" min="0" max="100" value="50">
+        </div>
+        
+        <div class="mood-slider">
+            <label for="danceability">Danceability</label>
+            <input type="range" id="danceability" min="0" max="100" value="50">
+        </div>
+        
+        <div class="mood-slider">
+            <label for="acousticness">Acousticness</label>
+            <input type="range" id="acousticness" min="0" max="100" value="50">
+        </div>
+        
+        <div class="mood-slider">
+            <label for="valence">Valence</label>
+            <input type="range" id="valence" min="0" max="100" value="50">
+        </div>
+        
+        <button onclick="getRecommendations()">Get Recommendations</button>
+        
+        <div id="recommendations"></div>
+    </div>
+
+    <script>
+        async function getRecommendations() {
+            const moodVector = [
+                document.getElementById('happiness').value / 100,
+                document.getElementById('energy').value / 100,
+                document.getElementById('danceability').value / 100,
+                document.getElementById('acousticness').value / 100,
+                document.getElementById('valence').value / 100
+            ];
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ moodVector }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const recommendations = await response.json();
+                displayRecommendations(recommendations);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to get recommendations. Please try again.');
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            recommendationsDiv.innerHTML = '<h2>Recommended Songs:</h2>';
+            
+            recommendations.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.classList.add('recommendation');
+                songElement.innerHTML = `<strong>${song.title}</strong> by ${song.artist}`;
+                recommendationsDiv.appendChild(songElement);
+            });
+        }
+    </script>
+</body>
+</html>
